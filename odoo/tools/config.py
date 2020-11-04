@@ -111,6 +111,8 @@ class configmanager(object):
         group.add_option("-i", "--init", dest="init", help="install one or more modules (comma-separated list, use \"all\" for all modules), requires -d")
         group.add_option("-u", "--update", dest="update",
                           help="update one or more modules (comma-separated list, use \"all\" for all modules). Requires -d.")
+        group.add_option("--uninstall", dest="uninstall",
+                          help="uninstall one or more modules including their DEPENDENCIES (comma-separated list). Requires -d.")
         group.add_option("--without-demo", dest="without_demo",
                           help="disable loading demo data for modules to be installed (comma-separated, use \"all\" for all modules). Requires -d and -i. Default is %default",
                           my_default=False)
@@ -484,8 +486,8 @@ class configmanager(object):
                 'db_maxconn', 'db_maxconn_gevent', 'import_partial', 'addons_path', 'upgrade_path', 'pre_upgrade_scripts',
                 'syslog', 'without_demo', 'screencasts', 'screenshots',
                 'dbfilter', 'log_level', 'log_db',
-                'log_db_level', 'geoip_city_db', 'geoip_country_db', 'dev_mode',
-                'shell_interface', 'limit_time_worker_cron',
+                'log_db_level', 'geoip_database', 'geoip_country_db', 'dev_mode',
+                'shell_interface', 'limit_time_worker_cron', 'uninstall',
         ]
 
         for arg in keys:
