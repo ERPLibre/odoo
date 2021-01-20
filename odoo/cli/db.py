@@ -1,174 +1,78 @@
-# Part of Odoo. See LICENSE file for full copyright and licensing details.
-import argparse
-import io
-import urllib.parse
+import optparse
+import os
 import sys
-import zipfile
-from functools import partial
-from pathlib import Path
 
-import requests
-
+import odoo
 from . import Command
-from .server import report_configuration
-from ..service.db import dump_db, exp_drop, exp_db_exist, exp_duplicate_database, exp_rename, restore_db
-from ..tools import config
+from odoo.service import db
+from odoo.http import dispatch_rpc
 
-eprint = partial(print, file=sys.stderr, flush=True)
 
 class Db(Command):
-    """ Create, drop, dump, load databases """
-    name = 'db'
 
     def run(self, cmdargs):
-        """Command-line version of the database manager.
-
-        Doesn't provide a `create` command as that's not useful. Commands are
-        all filestore-aware.
-        """
-        parser = argparse.ArgumentParser(
-            prog=f'{Path(sys.argv[0]).name} {self.name}',
-            description=self.__doc__.strip()
+        parser = optparse.OptionParser(
+            prog="%s start" % sys.argv[0].split(os.path.sep)[-1],
+            description=self.__doc__
         )
-        parser.add_argument('-c', '--config')
-        parser.add_argument('-D', '--data-dir')
-        parser.add_argument('--addons-path')
-        parser.add_argument('-r', '--db_user')
-        parser.add_argument('-w', '--db_password')
-        parser.add_argument('--pg_path')
-        parser.add_argument('--db_host')
-        parser.add_argument('--db_port')
-        parser.add_argument('--db_sslmode')
-        parser.set_defaults(func=lambda _: exit(parser.format_help()))
+        parser.add_option("-d", "--database", dest="db_name", default=None,
+                          help="Specify the database name (default to project's directory name")
+        parser.add_option('--restore_db_file', help="Path of file to restore")
+        parser.add_option('--restore_image', help="Image name from ERPLibre/image_db")
+        parser.add_option('--master_password', help="Specify the master password if need it.")
 
-        subs = parser.add_subparsers()
-        load = subs.add_parser(
-            "load", help="Load a dump file.",
-            description="Loads a dump file into odoo, dump file can be a URL. "
-                 "If `database` is provided, uses that as the database name. "
-                 "Otherwise uses the dump file name without extension.")
-        load.set_defaults(func=self.load)
-        load.add_argument(
-            '-f', '--force', action='store_const', default=False, const=True,
-            help="delete `database` database before loading if it exists"
-        )
-        load.add_argument(
-            '-n', '--neutralize', action='store_const', default=False, const=True,
-            help="neutralize the database after restore"
-        )
-        load.add_argument(
-            'database', nargs='?',
-            help="database to create, defaults to dump file's name "
-                 "(without extension)"
-        )
-        load.add_argument('dump_file', help="zip or pg_dump file to load")
+        # group = optparse.OptionGroup(parser, "Command")
+        parser.add_option("--drop", action="store_true", help="Command drop database.")
+        parser.add_option("--restore", action="store_true", help="Command restore database.")
+        parser.add_option("--list", action="store_true", help="Command list database.")
+        parser.add_option("--list_incompatible_db", action="store_true", help="Command list database incompatible.")
+        parser.add_option("--version", action="store_true", help="Command show odoo version.")
 
-        dump = subs.add_parser(
-            "dump", help="Create a dump with filestore.",
-            description="Creates a dump file. The dump is always in zip format "
-                        "(with filestore), to get a no-filestore format use "
-                        "pg_dump directly.")
-        dump.set_defaults(func=self.dump)
-        dump.add_argument('database', help="database to dump")
-        dump.add_argument(
-            'dump_path', nargs='?', default='-',
-            help="if provided, database is dumped to specified path, otherwise "
-                 "or if `-`, dumped to stdout",
-        )
+        opt, args = parser.parse_args(cmdargs)
 
-        duplicate = subs.add_parser("duplicate", help="Duplicate a database including filestore.")
-        duplicate.set_defaults(func=self.duplicate)
-        duplicate.add_argument(
-            '-f', '--force', action='store_const', default=False, const=True,
-            help="delete `target` database before copying if it exists"
-        )
-        duplicate.add_argument(
-            '-n', '--neutralize', action='store_const', default=False, const=True,
-            help="neutralize the target database after duplicate"
-        )
-        duplicate.add_argument("source")
-        duplicate.add_argument("target", help="database to copy `source` to, must not exist unless `-f` is specified in which case it will be dropped first")
+        die(bool(opt.drop) and bool(opt.restore) and bool(opt.list) and bool(opt.version) and bool(
+            opt.list_incompatible_db),
+            "Can only run one command, --drop, --list, --version, --list_incompatible_db or --restore.")
 
-        rename = subs.add_parser("rename", help="Rename a database including filestore.")
-        rename.set_defaults(func=self.rename)
-        rename.add_argument(
-            '-f', '--force', action='store_const', default=False, const=True,
-            help="delete `target` database before renaming if it exists"
-        )
-        rename.add_argument('source')
-        rename.add_argument("target", help="database to rename `source` to, must not exist unless `-f` is specified, in which case it will be dropped first")
+        die(bool(opt.restore) and not (bool(opt.restore_db_file) or bool(opt.restore_image)),
+            "Missing argument --restore_db_file or --restore_image of option --restore.")
 
-        drop = subs.add_parser("drop", help="Delete a database including filestore")
-        drop.set_defaults(func=self.drop)
-        drop.add_argument("database", help="database to delete")
+        die(bool(opt.restore) and not bool(opt.db_name),
+            "Missing argument --database of option --restore.")
 
-        args = parser.parse_args(cmdargs)
+        die(bool(opt.drop) and not bool(opt.db_name),
+            "Missing argument --database of option --drop.")
 
-        config.parse_config([
-            val
-            for k, v in vars(args).items()
-            if v is not None
-            if k in ['config', 'data_dir', 'addons_path'] or k.startswith(('db_', 'pg_'))
-            for val in [
-                '--data-dir' if k == 'data_dir'\
-                    else '--addons-path' if k == 'addons_path'\
-                    else f'--{k}',
-                v,
-            ]
-        ])
-        # force db management active to bypass check when only a
-        # `check_db_management_enabled` version is available.
-        config['list_db'] = True
-        report_configuration()
+        die(bool(opt.restore_db_file) and bool(opt.restore_image),
+            "Cannot support both argument --restore_db_file and --restore_image")
 
-        args.func(args)
-
-    def load(self, args):
-        db_name = args.database or Path(args.dump_file).stem
-        self._check_target(db_name, delete_if_exists=args.force)
-
-        url = urllib.parse.urlparse(args.dump_file)
-        if url.scheme:
-            eprint(f"Fetching {args.dump_file}...", end='')
-            r = requests.get(args.dump_file, timeout=10)
-            if not r.ok:
-                exit(f" unable to fetch {args.dump_file}: {r.reason}")
-
-            eprint(" done")
-            dump_file = io.BytesIO(r.content)
-        else:
-            eprint(f"Restoring {args.dump_file}...")
-            dump_file = args.dump_file
-
-        if not zipfile.is_zipfile(dump_file):
-            exit("Not a zipped dump file, use `pg_restore` to restore raw dumps,"
-                 " and `psql` to execute sql dumps or scripts.")
-
-        restore_db(db=db_name, dump_file=dump_file, copy=True, neutralize_database=args.neutralize)
-
-    def dump(self, args):
-        if args.dump_path == '-':
-            dump_db(args.database, sys.stdout.buffer)
-        else:
-            with open(args.dump_path, 'wb') as f:
-                dump_db(args.database, f)
-
-    def duplicate(self, args):
-        self._check_target(args.target, delete_if_exists=args.force)
-        exp_duplicate_database(args.source, args.target, neutralize_database=args.neutralize)
-
-    def rename(self, args):
-        self._check_target(args.target, delete_if_exists=args.force)
-        exp_rename(args.source, args.target)
-
-    def drop(self, args):
-        if not exp_drop(args.database):
-            exit(f"Database {args.database} does not exist.")
-
-    def _check_target(self, target, *, delete_if_exists):
-        if exp_db_exist(target):
-            if delete_if_exists:
-                exp_drop(target)
+        with odoo.api.Environment.manage():
+            if opt.list:
+                lst_db = db.list_dbs()
+                for db_obj in lst_db:
+                    print(db_obj)
+            elif opt.list_incompatible_db:
+                lst_db = db.list_db_incompatible(db.list_dbs())
+                for db_obj in lst_db:
+                    print(db_obj)
+            elif opt.drop:
+                master_password = opt.master_password if opt.master_password else 'admin'
+                dispatch_rpc('db', 'drop', [master_password, opt.db_name])
+            elif opt.restore:
+                if opt.restore_image:
+                    file_name = opt.restore_image if opt.restore_image.endswith(".zip") else f"{opt.restore_image}.zip"
+                    file_path = os.path.join(".", "image_db", file_name)
+                    db.restore_db(opt.db_name, file_path, False)
+                elif opt.restore_db_file:
+                    db.restore_db(opt.db_name, opt.restore_db_file, False)
+            elif opt.version:
+                print(db.exp_server_version())
             else:
-                exit(f"Target database {target} exists, aborting.\n\n"
-                     f"\tuse `--force` to delete the existing database anyway.")
+                parser.print_help(sys.stderr)
+                die(True, "ERROR, missing command")
+
+
+def die(cond, message, code=1):
+    if cond:
+        print(message, file=sys.stderr)
+        sys.exit(code)
