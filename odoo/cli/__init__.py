@@ -14,3 +14,4 @@ from . import shell
 from . import start
 from . import populate
 from . import db
+from . import i18n
