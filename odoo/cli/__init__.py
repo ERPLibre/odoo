@@ -16,3 +16,4 @@ from . import populate
 from . import tsconfig
 from . import genproxytoken
 from . import db
+from . import i18n
