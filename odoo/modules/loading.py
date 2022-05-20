@@ -524,6 +524,20 @@ def load_modules(db, force_demo=False, status=None, update_module=False):
             else:
                 _logger.info('Module(s) not installed %s', modulenames)
 
+        if tools.config.get('install_theme'):
+            env = api.Environment(cr, SUPERUSER_ID, {})
+            module_names = tools.config.pop('install_theme').split(',')
+            if len(module_names) != 1:
+                _logger.error(f'Can only install one theme, ignore it "{module_names}".')
+            else:
+                module_name = module_names[0]
+                ir_module = env['ir.module.module']
+                install_theme_id = ir_module.search([('name', '=', module_name)], limit=1)
+                if install_theme_id:
+                    install_theme_id.button_choose_theme()
+                else:
+                    _logger.error(f'Cannot find theme name "{module_name}".')
+
         # STEP 5: Uninstall modules to remove
         if update_module:
             # Remove records referenced from ir_model_data for modules to be
