@@ -106,6 +106,7 @@ class configmanager(object):
         group.add_option("-s", "--save", action="store_true", dest="save", default=False,
                           help="save configuration to ~/.odoorc (or to ~/.openerp_serverrc if it exists)")
         group.add_option("-i", "--init", dest="init", help="install one or more modules (comma-separated list, use \"all\" for all modules), requires -d")
+        group.add_option("--install-theme", dest="install_theme", help="install one theme, requires -d")
         group.add_option("-u", "--update", dest="update",
                           help="update one or more modules (comma-separated list, use \"all\" for all modules). Requires -d.")
         group.add_option("--uninstall", dest="uninstall",
@@ -451,7 +452,8 @@ class configmanager(object):
                 'db_maxconn', 'import_partial', 'addons_path', 'upgrade_path',
                 'syslog', 'without_demo', 'screencasts', 'screenshots',
                 'dbfilter', 'log_level', 'log_db',
-                'log_db_level', 'geoip_database', 'dev_mode', 'shell_interface', 'uninstall'
+                'log_db_level', 'geoip_database', 'dev_mode', 'shell_interface', 'uninstall',
+                'install_theme',
         ]
 
         for arg in keys:
