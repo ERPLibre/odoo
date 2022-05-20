@@ -109,6 +109,7 @@ class configmanager(object):
         group.add_option("-s", "--save", action="store_true", dest="save", default=False,
                           help="save configuration to ~/.odoorc (or to ~/.openerp_serverrc if it exists)")
         group.add_option("-i", "--init", dest="init", help="install one or more modules (comma-separated list, use \"all\" for all modules), requires -d")
+        group.add_option("--install-theme", dest="install_theme", default="", help="install one website theme if needed and apply it to the current website, requires -d")
         group.add_option("-u", "--update", dest="update",
                           help="update one or more modules (comma-separated list, use \"all\" for all modules). Requires -d.")
         group.add_option("--uninstall", dest="uninstall",
@@ -491,7 +492,7 @@ class configmanager(object):
                 'syslog', 'without_demo', 'skip_auto_install', 'screencasts', 'screenshots',
                 'dbfilter', 'log_config', 'log_level', 'log_db',
                 'log_db_level', 'geoip_city_db', 'geoip_country_db', 'dev_mode',
-                'shell_interface', 'limit_time_worker_cron', 'uninstall',
+                'shell_interface', 'limit_time_worker_cron', 'uninstall', 'install_theme',
         ]
 
         for arg in keys:
@@ -575,6 +576,13 @@ class configmanager(object):
         self.options['demo'] = (dict(self.options['init'])
                                 if not self.options['without_demo'] else {})
         self.options['update'] = opt.update and dict.fromkeys(opt.update.split(','), 1) or {}
+        # --install-theme implies -i: the theme goes through the normal install
+        # of load_modules, which alone can install while the registry loads.
+        # load_modules then applies it to the website once installed. Several
+        # names are left out here; load_modules reports them as an error.
+        install_theme = self.options.get('install_theme')
+        if install_theme and ',' not in install_theme:
+            self.options['init'].setdefault(install_theme, 1)
         self.options['translate_modules'] = opt.translate_modules and [m.strip() for m in opt.translate_modules.split(',')] or ['all']
         self.options['translate_modules'].sort()
 

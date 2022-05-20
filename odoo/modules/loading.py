@@ -372,6 +372,47 @@ def load_marked_modules(env, graph, states, force, progressdict, report,
             break
     return processed_modules
 
+
+def _apply_install_theme(env, install_theme):
+    """ Apply the theme named by --install-theme to the current website.
+
+        The theme is already installed when this runs: the option adds it to
+        -i (tools.config), so load_modules installs it like any other module.
+        What remains is what the website "Choose theme" button does once the
+        module is installed: remove the website's current theme, set
+        website.theme_id, then copy every theme of the stream onto the
+        website, upstream first, running each one's _post_copy
+        (apply_new_theme). The button itself cannot be called here: it
+        installs through _button_immediate_function, which refuses a registry
+        that is still loading.
+
+        Errors are logged, never raised: a wrong theme name must not abort the
+        loading of the database.
+    """
+    names = install_theme.split(',')
+    if len(names) != 1:
+        _logger.error('--install-theme takes one theme, got %s: ignored.', names)
+        return
+    name = names[0]
+    if 'website' not in env:
+        _logger.error('--install-theme %s: the website module is not installed.', name)
+        return
+    Module = env['ir.module.module']
+    theme = Module.search(Module.get_themes_domain() + [('name', '=', name)], limit=1)
+    if not theme:
+        _logger.error('--install-theme %s: no theme module with this name.', name)
+        return
+    if theme.state != 'installed':
+        _logger.error('--install-theme %s: module is %s, not installed.', name, theme.state)
+        return
+    website = env['website'].get_current_website()
+    Module._theme_remove(website)
+    website.theme_id = theme
+    for stream_theme in theme._theme_get_stream_themes():
+        stream_theme.with_context(apply_new_theme=True)._theme_load(website)
+    _logger.info('--install-theme %s: applied to website %s.', name, website.id)
+
+
 def load_modules(registry, force_demo=False, status=None, update_module=False):
     """ Load the modules for a registry object that has just been created.  This
         function is part of Registry.new() and should not be used anywhere else.
@@ -569,6 +610,10 @@ def load_modules(registry, force_demo=False, status=None, update_module=False):
                              uninstall_ids.mapped('name'))
             else:
                 _logger.info('Module(s) not installed %s', modulenames)
+
+        if tools.config.get('install_theme'):
+            env = api.Environment(cr, SUPERUSER_ID, {})
+            _apply_install_theme(env, tools.config.pop('install_theme'))
 
         # STEP 5: Uninstall modules to remove
         if update_module:
