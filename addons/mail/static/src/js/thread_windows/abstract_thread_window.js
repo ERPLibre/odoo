@@ -54,6 +54,7 @@ var AbstractThreadWindow = Widget.extend({
      */
     init: function (parent, thread, options) {
         this._super(parent);
+        console.warn("mathben test abstract thread window");
 
         this.options = _.defaults(options || {}, {
             autofocus: true,
