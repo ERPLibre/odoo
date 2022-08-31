@@ -18,14 +18,6 @@ chat operators.
 Help your customers with this chat, and analyse their feedback.
 
         """,
-    'data': [
-        "views/im_livechat_channel_templates.xml",
-    ],
-    'demo': [
-        "data/im_livechat_channel_demo.xml",
-        'data/mail_shortcode_demo.xml',
-    ],
-    'depends': ["mail", "rating"],
     'installable': True,
     'auto_install': False,
     'application': True,
