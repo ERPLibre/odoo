@@ -19,22 +19,13 @@ Help your customers with this chat, and analyse their feedback.
 
         """,
     'data': [
-        # "data/mail_shortcode_data.xml",
-        # "security/im_livechat_channel_security.xml",
-        # "security/ir.model.access.csv",
-        # "views/rating_views.xml",
-        # "views/mail_channel_views.xml",
-        # "views/im_livechat_channel_views.xml",
         "views/im_livechat_channel_templates.xml",
-        # "report/im_livechat_report_channel_views.xml",
-        # "report/im_livechat_report_operator_views.xml"
     ],
     'demo': [
         "data/im_livechat_channel_demo.xml",
         'data/mail_shortcode_demo.xml',
     ],
     'depends': ["mail", "rating"],
-    'qweb': ['static/src/xml/*.xml'],
     'installable': True,
     'auto_install': False,
     'application': True,
