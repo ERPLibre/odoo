@@ -169,6 +169,7 @@ class ImDispatch(object):
                 if select.select([conn], [], [], TIMEOUT) == ([], [], []):
                     pass
                 else:
+                    _logger.info("Mathben send data")
                     conn.poll()
                     channels = []
                     while conn.notifies:
