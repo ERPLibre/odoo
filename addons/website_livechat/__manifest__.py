@@ -13,6 +13,5 @@ Allow website visitors to chat with the collaborators. This module also brings a
     'auto_install': True,
     'data': [
         'views/website_livechat.xml',
-        'data/website_livechat_data.xml',
     ],
 }
