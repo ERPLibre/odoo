@@ -166,6 +166,7 @@ class ImDispatch(object):
             cr.execute("listen imbus")
             cr.commit();
             while True:
+                _logger.info("Mathben select")
                 if select.select([conn], [], [], TIMEOUT) == ([], [], []):
                     pass
                 else:
@@ -183,6 +184,7 @@ class ImDispatch(object):
     def run(self):
         while True:
             try:
+                _logger.info("Mathben")
                 self.loop()
             except Exception as e:
                 _logger.exception("Bus.loop error, sleep and retry")
