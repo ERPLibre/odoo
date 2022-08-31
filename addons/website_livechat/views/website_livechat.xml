@@ -20,11 +20,41 @@
             <xpath expr="//div[@id='wrapwrap']" position="after">
                 <t t-if="website and website.channel_id">
                     <script>
-                        <t t-call="im_livechat.loader">
-                            <t t-set="channel" t-value="website.channel_id.id"/>
+<!--                        <t t-call="im_livechat.loader">-->
+<!--                            <t t-set="channel" t-value="website.channel_id.id"/>-->
+<!--                        </t>-->
+                        <t t-translation="off">
+                document.addEventListener("DOMContentLoaded", function(event) {
+                    odoo.define('im_livechat.livesupport', function (require) {
+                        console.debug("Before is available");
+                        var rootWidget = require('root.widget');
+                        var im_livechat = require('im_livechat.im_livechat');
+                        var button = new im_livechat.LivechatButton(rootWidget);
+                        button.appendTo($('body'));
+                        window.livechat_button = button;
+                    });
+                });
                         </t>
                     </script>
                 </t>
+<!--                <script>-->
+<!--                    document.addEventListener("DOMContentLoaded", function(event) {-->
+<!--                        odoo.define('web.session', function (require) {-->
+<!--                            var Session = require('web.Session');-->
+<!--                            var modules = odoo._modules;-->
+<!--                            return new Session(undefined, "http://127.0.0.1:8069", {modules:modules, use_cors: false});-->
+<!--                        }-->
+
+<!--                        odoo.define('im_livechat.livesupport', function (require) {-->
+<!--                            console.warn("MATHBEN Before is available");-->
+<!--                            var rootWidget = require('root.widget');-->
+<!--                            var im_livechat = require('im_livechat.im_livechat');-->
+<!--                            var button = new im_livechat.LivechatButton(rootWidget);-->
+<!--                            button.appendTo($('body'));-->
+<!--                            window.livechat_button = button;-->
+<!--                        })-->
+<!--                    })-->
+<!--                </script>-->
             </xpath>
         </template>
 
