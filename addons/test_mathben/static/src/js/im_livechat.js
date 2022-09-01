@@ -5,25 +5,12 @@ require('bus.BusService');
 var core = require('web.core');
 var session = require('web.session');
 var Widget = require('web.Widget');
-
-
-var _t = core._t;
 var QWeb = core.qweb;
 
 var LivechatButton = Widget.extend({
     init: function (parent, serverURL, options) {
         this._super(parent);
         console.debug("mom");
-
-        this.options = _.defaults(options || {}, {
-            input_placeholder: _t("Ask something ..."),
-            default_username: _t("Visitor"),
-            button_text: _t("Chat with one of our collaborators"),
-            default_message: _t("How may I help you?"),
-        });
-
-        this._messages = [];
-        this._serverURL = serverURL;
     },
     willStart: function () {
         return this._loadQWebTemplate();

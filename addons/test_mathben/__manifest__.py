@@ -10,7 +10,6 @@ Allow website visitors to chat with the collaborators. This module also brings a
     'depends': ['website'],
     'installable': True,
     'application': True,
-    'auto_install': True,
     'data': [
         'views/website_livechat.xml',
     ],
