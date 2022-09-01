@@ -11,7 +11,7 @@
                 <script type="text/javascript" src="/bus/static/src/js/crosstab_bus.js"></script>
                 <script type="text/javascript" src="/bus/static/src/js/services/bus_service.js"></script>
 
-                <script type="text/javascript" src="/website_livechat/static/src/js/im_livechat.js"></script>
+                <script type="text/javascript" src="/test_mathben/static/src/js/im_livechat.js"></script>
             </xpath>
         </template>
 
