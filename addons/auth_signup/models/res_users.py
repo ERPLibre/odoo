@@ -155,6 +155,7 @@ class ResUsers(models.Model):
         """ retrieve the user corresponding to login (login or email),
             and reset their password
         """
+        login = login.strip()
         users = self.search(self._get_login_domain(login))
         if not users:
             users = self.search(self._get_email_domain(login))
