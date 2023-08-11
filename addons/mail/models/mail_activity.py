@@ -530,7 +530,7 @@ class MailActivity(models.Model):
 
             # post message on activity, before deleting it
             record = self.env[activity.res_model].browse(activity.res_id)
-            record.message_post_with_view(
+            record.with_context({"mail_activity": True}).message_post_with_view(
                 'mail.message_activity_done',
                 values={
                     'activity': activity,
