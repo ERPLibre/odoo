@@ -22,7 +22,7 @@
                                 active_id: suggestedRecipientInfo.thread.id,
                                 active_model: 'mail.compose.message',
                                 default_email: suggestedRecipientInfo.email,
-                                default_name: suggestedRecipientInfo.name,
+                                default_name: formatName(suggestedRecipientInfo.name),
                                 force_email: true,
                                 ref: 'compound_context',
                             },
