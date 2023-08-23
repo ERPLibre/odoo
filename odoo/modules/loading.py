@@ -519,7 +519,10 @@ def load_modules(registry, force_demo=False, status=None, update_module=False):
             tools.config[kind] = {}
 
         # Mark the modules to uninstall if any given in command line with --uninstall
-        if tools.config.get('uninstall'):
+        v = tools.config.get('uninstall')
+        if v == "None":
+            v = False
+        if v:
             env = api.Environment(cr, SUPERUSER_ID, {})
             modulenames = tools.config.pop('uninstall').split(',')
             irmodule = env['ir.module.module']
@@ -534,7 +537,10 @@ def load_modules(registry, force_demo=False, status=None, update_module=False):
             else:
                 _logger.info('Module(s) not installed %s', modulenames)
 
-        if tools.config.get('install_theme'):
+        v = tools.config.get('install_theme')
+        if v == "None":
+            v = False
+        if v:
             env = api.Environment(cr, SUPERUSER_ID, {})
             module_names = tools.config.pop('install_theme').split(',')
             if len(module_names) != 1:
