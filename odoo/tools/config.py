@@ -107,7 +107,7 @@ class configmanager(object):
         group.add_option("-s", "--save", action="store_true", dest="save", default=False,
                           help="save configuration to ~/.odoorc (or to ~/.openerp_serverrc if it exists)")
         group.add_option("-i", "--init", dest="init", help="install one or more modules (comma-separated list, use \"all\" for all modules), requires -d")
-        group.add_option("--install-theme", dest="install_theme", help="install one theme, requires -d")
+        group.add_option("--install-theme", dest="install_theme", my_default='', help="install one theme, requires -d")
         group.add_option("-u", "--update", dest="update",
                           help="update one or more modules (comma-separated list, use \"all\" for all modules). Requires -d.")
         group.add_option("--uninstall", dest="uninstall",
