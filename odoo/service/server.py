@@ -931,11 +931,18 @@ class PreforkServer(CommonServer):
 
         if config['http_enable']:
             # listen to socket
-            _logger.info('HTTP service (werkzeug) running on %s:%s', self.interface, self.port)
-            self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            self.socket.setblocking(0)
-            self.socket.bind((self.interface, self.port))
+            if config.get("unix_socket_path"):
+                _logger.info('Unix socket service (werkzeug) running on %s', config.get("unix_socket_path"))
+                self.socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self.socket.setblocking(0)
+                self.socket.bind((config.get("unix_socket_path")))
+            else:
+                _logger.info('HTTP service (werkzeug) running on %s:%s', self.interface, self.port)
+                self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+                self.socket.setblocking(0)
+                self.socket.bind((self.interface, self.port))
             self.socket.listen(8 * self.population)
 
     def stop(self, graceful=True):
