@@ -1966,7 +1966,7 @@ var FieldBinaryImage = AbstractFieldBinary.extend({
 
         $img.one('error', function () {
             $img.attr('src', self.placeholder);
-            self.do_warn(false, _t("Could not display the selected image"));
+            // self.do_warn(false, _t("Could not display the selected image"));
         });
 
         return this._super.apply(this, arguments);
