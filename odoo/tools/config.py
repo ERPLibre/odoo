@@ -487,7 +487,7 @@ class configmanager(object):
                 'db_maxconn', 'db_maxconn_gevent', 'import_partial', 'addons_path', 'upgrade_path', 'pre_upgrade_scripts',
                 'syslog', 'without_demo', 'screencasts', 'screenshots',
                 'dbfilter', 'log_level', 'log_db',
-                'log_db_level', 'geoip_database', 'geoip_country_db', 'dev_mode',
+                'log_db_level', 'geoip_city_db', 'geoip_country_db', 'dev_mode',
                 'shell_interface', 'limit_time_worker_cron', 'uninstall', 'install_theme',
         ]
 
