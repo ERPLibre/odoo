@@ -78,45 +78,44 @@ class Db(Command):
         die(bool(opt.restore_db_file) and bool(opt.restore_image),
             "Cannot support both argument --restore_db_file and --restore_image")
 
-        with odoo.api.Environment.manage():
-            if opt.list:
-                lst_db = db.list_dbs()
-                for db_obj in lst_db:
-                    print(db_obj)
-            elif opt.list_incompatible_db:
-                lst_db = db.list_db_incompatible(db.list_dbs())
-                for db_obj in lst_db:
-                    print(db_obj)
-            elif opt.drop:
-                master_password = opt.master_password if opt.master_password else 'admin'
-                dispatch_rpc('db', 'drop', [master_password, opt.db_name])
-            elif opt.create:
-                db.exp_create_database(opt.db_name, opt.demo, opt.user_lang, user_password=opt.user_password,
-                                       login=opt.user_login, country_code=opt.user_country_code, phone=opt.user_phone)
-            elif opt.backup:
-                if opt.restore_image:
-                    file_name = opt.restore_image if opt.restore_image.endswith(".zip") else f"{opt.restore_image}.zip"
-                    file_path = os.path.join(".", "image_db", file_name)
-                elif opt.restore_db_file:
-                    file_path = opt.restore_db_file
-                with open(file_path, "wb") as destiny:
-                    # Generate new backup
-                    db.dump_db(opt.db_name, destiny, backup_format="zip")
-                    print(f"Generate {destiny.name}")
-            elif opt.restore:
-                if opt.restore_image:
-                    file_name = opt.restore_image if opt.restore_image.endswith(".zip") else f"{opt.restore_image}.zip"
-                    file_path = os.path.join(".", "image_db", file_name)
-                elif opt.restore_db_file:
-                    file_path = opt.restore_db_file
-                db.restore_db(opt.db_name, file_path, False)
-            elif opt.clone:
-                db.exp_duplicate_database(opt.db_name_from, opt.db_name)
-            elif opt.version:
-                print(db.exp_server_version())
-            else:
-                parser.print_help(sys.stderr)
-                die(True, "ERROR, missing command")
+        if opt.list:
+            lst_db = db.list_dbs()
+            for db_obj in lst_db:
+                print(db_obj)
+        elif opt.list_incompatible_db:
+            lst_db = db.list_db_incompatible(db.list_dbs())
+            for db_obj in lst_db:
+                print(db_obj)
+        elif opt.drop:
+            master_password = opt.master_password if opt.master_password else 'admin'
+            dispatch_rpc('db', 'drop', [master_password, opt.db_name])
+        elif opt.create:
+            db.exp_create_database(opt.db_name, opt.demo, opt.user_lang, user_password=opt.user_password,
+                                   login=opt.user_login, country_code=opt.user_country_code, phone=opt.user_phone)
+        elif opt.backup:
+            if opt.restore_image:
+                file_name = opt.restore_image if opt.restore_image.endswith(".zip") else f"{opt.restore_image}.zip"
+                file_path = os.path.join(".", "image_db", file_name)
+            elif opt.restore_db_file:
+                file_path = opt.restore_db_file
+            with open(file_path, "wb") as destiny:
+                # Generate new backup
+                db.dump_db(opt.db_name, destiny, backup_format="zip")
+                print(f"Generate {destiny.name}")
+        elif opt.restore:
+            if opt.restore_image:
+                file_name = opt.restore_image if opt.restore_image.endswith(".zip") else f"{opt.restore_image}.zip"
+                file_path = os.path.join(".", "image_db", file_name)
+            elif opt.restore_db_file:
+                file_path = opt.restore_db_file
+            db.restore_db(opt.db_name, file_path, False)
+        elif opt.clone:
+            db.exp_duplicate_database(opt.db_name_from, opt.db_name)
+        elif opt.version:
+            print(db.exp_server_version())
+        else:
+            parser.print_help(sys.stderr)
+            die(True, "ERROR, missing command")
 
 
 def die(cond, message, code=1):
