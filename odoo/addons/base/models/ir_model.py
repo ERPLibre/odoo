@@ -268,8 +268,8 @@ class IrModel(models.Model):
     @api.constrains('model')
     def _check_model_name(self):
         for model in self:
-            if model.state == 'manual':
-                self._check_manual_name(model.model)
+            # if model.state == 'manual':
+            #     self._check_manual_name(model.model)
             if not models.check_object_name(model.model):
                 raise ValidationError(_("The model name can only contain lowercase characters, digits, underscores and dots."))
 
@@ -665,11 +665,11 @@ class IrModelFields(models.Model):
     _sql_constraints = [
         ('name_unique', 'UNIQUE(model, name)', "Field names must be unique per model."),
         ('size_gt_zero', 'CHECK (size>=0)', 'Size of the field cannot be negative.'),
-        (
-            "name_manual_field",
-            "CHECK (state != 'manual' OR name LIKE 'x\\_%')",
-            "Custom fields must have a name that starts with 'x_'!"
-        ),
+        # (
+        #     "name_manual_field",
+        #     "CHECK (state != 'manual' OR name LIKE 'x\\_%')",
+        #     "Custom fields must have a name that starts with 'x_'!"
+        # ),
     ]
 
     def _related_field(self):
@@ -1329,9 +1329,9 @@ class IrModelFields(models.Model):
             attrs['domain'] = safe_eval(field_data['domain'] or '[]')
         elif field_data['ttype'] == 'monetary':
             # be sure that custom monetary field are always instanciated
-            if not self.pool.loaded and \
-                field_data['currency_field'] and not self._is_manual_name(field_data['currency_field']):
-                return
+            # if not self.pool.loaded and \
+            #     field_data['currency_field'] and not self._is_manual_name(field_data['currency_field']):
+            #     return
             attrs['currency_field'] = field_data['currency_field']
         # add compute function if given
         if field_data['compute']:

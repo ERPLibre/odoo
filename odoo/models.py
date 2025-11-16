@@ -669,10 +669,10 @@ class BaseModel(metaclass=MetaModel):
             isinstance(getattr(model, name, None), fields.Field)
             for model in [cls] + [self.env.registry[inherit] for inherit in cls._inherits]
         )
-        if not (is_class_field or self.env['ir.model.fields']._is_manual_name(name)):
-            raise ValidationError(
-                f"The field `{name}` is not defined in the `{cls._name}` Python class and does not start with 'x_'"
-            )
+        # if not (is_class_field or self.env['ir.model.fields']._is_manual_name(name)):
+        #     raise ValidationError(
+        #         f"The field `{name}` is not defined in the `{cls._name}` Python class and does not start with 'x_'"
+        #     )
 
         # Assert the attribute to assign is a Field
         if not isinstance(field, fields.Field):
