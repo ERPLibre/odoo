@@ -36,6 +36,9 @@ class Db(Command):
         parser.add_option("--backup", action="store_true", help="Command backup database to export in .zip file. "
                                                                 "Need argument --restore_image or --restore_db_file.")
         parser.add_option("--drop", action="store_true", help="Command drop database.")
+        parser.add_option("--neutralize", action="store_true", help="Neutralize the database after restore")
+        parser.add_option("--move_database", action="store_true",
+                          help="Will move database instead of copy it. Copying a database will reinit system configuration.")
         parser.add_option("--create", action="store_true", help="Create database.")
         parser.add_option("--clone", action="store_true", help="Command clone database. "
                                                                "Need argument --db_name_from")
@@ -109,9 +112,9 @@ class Db(Command):
                     file_path = os.path.join(".", "image_db", file_name)
                 elif opt.restore_db_file:
                     file_path = opt.restore_db_file
-                db.restore_db(opt.db_name, file_path, False)
+                db.restore_db(opt.db_name, file_path, copy=not opt.move_database, neutralize_database=opt.neutralize)
             elif opt.clone:
-                db.exp_duplicate_database(opt.db_name_from, opt.db_name)
+                db.exp_duplicate_database(opt.db_name_from, opt.db_name, neutralize_database=opt.neutralize)
             elif opt.version:
                 print(db.exp_server_version())
             else:
