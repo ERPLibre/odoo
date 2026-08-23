@@ -9,6 +9,19 @@ from odoo.service import db
 from odoo.http import dispatch_rpc
 
 
+def _master_password(opt):
+    """Le mot de passe maitre, hors de la ligne de commande de preference.
+
+    « --master_password » reste accepte, mais un argument traverse argv :
+    /proc/<pid>/cmdline est lisible par TOUT utilisateur de la machine, et
+    la commande se retrouve dans les journaux de ce qui l'affiche.
+    /proc/<pid>/environ, lui, n'est lisible que par son proprietaire.
+
+    L'environnement l'emporte donc quand il porte une valeur.
+    """
+    return os.environ.get('MASTER_PWD') or opt.master_password or 'admin'
+
+
 class Db(Command):
 
     def run(self, cmdargs):
@@ -22,7 +35,10 @@ class Db(Command):
                           help="Specify the database name to clone from.")
         parser.add_option('--restore_db_file', help="Path of file to restore")
         parser.add_option('--restore_image', help="Image name from ERPLibre/image_db")
-        parser.add_option('--master_password', help="Specify the master password if need it.")
+        parser.add_option('--master_password',
+                          help="Specify the master password if need it. Prefer the MASTER_PWD "
+                               "environment variable: an argument is visible in ps to every "
+                               "user on the machine.")
 
         # create options
         parser.add_option("--demo", action="store_true", help="Add demo data in create database.")
@@ -91,8 +107,7 @@ class Db(Command):
                 for db_obj in lst_db:
                     print(db_obj)
             elif opt.drop:
-                master_password = opt.master_password if opt.master_password else 'admin'
-                dispatch_rpc('db', 'drop', [master_password, opt.db_name])
+                dispatch_rpc('db', 'drop', [_master_password(opt), opt.db_name])
             elif opt.create:
                 db.exp_create_database(opt.db_name, opt.demo, opt.user_lang, user_password=opt.user_password,
                                        login=opt.user_login, country_code=opt.user_country_code, phone=opt.user_phone)
