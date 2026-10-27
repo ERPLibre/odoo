@@ -120,22 +120,30 @@ class Users(models.Model):
                         subtype_xmlid='mail.mt_note'
                     )
 
+        # Each user is told in their own language: subject and body are
+        # translated by the env of the notified user, not by the one of
+        # whoever changes the account.
         if 'login' in vals:
-            self._notify_security_setting_update(
-                _("Security Update: Login Changed"),
-                _("Your account login has been updated"),
-            )
+            for user in self:
+                user = user.with_context(lang=user.lang)
+                user._notify_security_setting_update(
+                    user.env._("Security Update: Login Changed"),
+                    user.env._("Your account login has been updated"),
+                )
         if 'password' in vals:
-            self._notify_security_setting_update(
-                _("Security Update: Password Changed"),
-                _("Your account password has been updated"),
-            )
+            for user in self:
+                user = user.with_context(lang=user.lang)
+                user._notify_security_setting_update(
+                    user.env._("Security Update: Password Changed"),
+                    user.env._("Your account password has been updated"),
+                )
         if 'email' in vals:
             # when the email is modified, we want notify the previous address (and not the new one)
             for user, previous_email in previous_email_by_user.items():
-                self._notify_security_setting_update(
-                    _("Security Update: Email Changed"),
-                    _(
+                user = user.with_context(lang=user.lang)
+                user._notify_security_setting_update(
+                    user.env._("Security Update: Email Changed"),
+                    user.env._(
                         "Your account email has been changed from %(old_email)s to %(new_email)s.",
                         old_email=previous_email,
                         new_email=user.email,
