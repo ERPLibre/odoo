@@ -4,6 +4,7 @@ import functools
 import logging
 from lxml import etree
 import os
+import re
 import unittest
 
 import pytz
@@ -24,6 +25,21 @@ from odoo.addons.http_routing.models import ir_http
 from odoo.addons.portal.controllers.portal import _build_url_w_params
 
 logger = logging.getLogger(__name__)
+
+
+def _raw_cookie_value(name):
+    """ Return the value of cookie ``name`` as sent in the Cookie header, or
+    None when the request does not carry it.
+
+    The website writes ``website_cookies_bar`` as bare JSON, spaces and
+    double quotes included. Werkzeug 3.1.9 and later drop such a value from
+    ``request.cookies`` as an invalid cookie token, so the header is read
+    as it is: the value runs up to the next semicolon, which JSON written
+    by the website never contains.
+    """
+    header = request.httprequest.headers.get('Cookie', '')
+    match = re.search(r'(?:^|;)\s*%s=([^;]*)' % re.escape(name), header)
+    return match.group(1) if match else None
 
 
 def sitemap_qs2dom(qs, route, field='name'):
@@ -455,7 +471,13 @@ class Http(models.AbstractModel):
             if not request.env['website'].get_current_website().cookies_bar:
                 # Cookies bar is disabled on this website
                 return True
-            accepted_cookie_types = json_scriptsafe.loads(request.cookies.get('website_cookies_bar', '{}'))
+            consent = request.cookies.get('website_cookies_bar')
+            if consent is None:
+                consent = _raw_cookie_value('website_cookies_bar')
+            try:
+                accepted_cookie_types = json_scriptsafe.loads(consent or '{}')
+            except ValueError:
+                return False
 
             # pre-16.0 compatibility, `website_cookies_bar` was `"true"`.
             # In that case we delete that cookie and let the user choose again.
